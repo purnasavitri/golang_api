@@ -37,6 +37,63 @@ func main() {
 		db.Find(&users)
 		c.JSON(http.StatusOK, gin.H{"data":users})
 	})
+
+	router.POST("/users", func(c *gin.Context){
+		var newUsers User
+
+		if err := c.ShouldBindJSON(&newUsers); err != nil {
+			fmt.Println("Error: ", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		db.Create(&newUsers)
+		c.JSON(http.StatusCreated, gin.H{"data": newUsers})
+	})
 	
+	router.GET("/users/:id", func(c *gin.Context) {
+		var user User
+		id := c.Param("id")
+	
+		if err := db.First(&user, id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User tidak ditemukan"})
+			return
+		}
+	
+		c.JSON(http.StatusOK, gin.H{"data": user})
+	})
+
+	router.PUT("/users/:id", func(c *gin.Context) {
+		var user User
+		id := c.Param("id")
+	
+		if err := db.First(&user, id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User tidak ditemukan"})
+			return
+		}
+	
+		if err := c.ShouldBindJSON(&user); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	
+		db.Save(&user)
+	
+		c.JSON(http.StatusOK, gin.H{"message": "User berhasil diperbarui", "data": user})
+	})
+
+	router.DELETE("/users/:id", func(c *gin.Context) {
+		var user User
+		id := c.Param("id")
+	
+		if err := db.First(&user, id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User tidak ditemukan"})
+			return
+		}
+	
+		db.Delete(&user)
+	
+		c.JSON(http.StatusOK, gin.H{"message": "User berhasil dihapus"})
+	})
+
 	router.Run(":3000")
 }
