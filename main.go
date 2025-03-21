@@ -1,11 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -30,11 +30,13 @@ func main() {
 		fmt.Println("failed to connect database")
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		var result User
-		db.First(&result)
-		response, _ := json.Marshal(result)
-		fmt.Fprintf(w, string(response))
+	router := gin.Default()
+
+	router.GET("/users", func(c *gin.Context) {
+		var users []User
+		db.Find(&users)
+		c.JSON(http.StatusOK, gin.H{"data":users})
 	})
-	http.ListenAndServe(":3000", nil)
+	
+	router.Run(":3000")
 }
